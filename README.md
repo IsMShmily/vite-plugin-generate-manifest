@@ -31,6 +31,7 @@ export default defineConfig({
       larkWebhook: "https://open.larksuite.com/open-apis/bot/v2/hook/xxx", // 飞书机器人 webhook 地址
       larkKeyWord: "构建通知", // 飞书通知关键词
       basePath: "/your-base-path", // OSS 静态资源上传到的路径
+      ignoreRouterPath: ["/path"], // 离线包忽略router地址
     }),
   ],
 });
@@ -49,6 +50,7 @@ export default defineConfig({
 - `larkWebhook`: string - 飞书机器人 webhook 地址
 - `larkKeyWord`: string - 飞书通知关键词
 - `basePath`: string - OSS 静态资源上传到的路径
+- `ignoreRouterPath`: string[] - 离线包忽略 router 地址
 
 ## 功能说明
 

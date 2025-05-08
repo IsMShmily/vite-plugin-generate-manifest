@@ -12,6 +12,7 @@
  * @property {string} larkWebhook - 飞书 webhook
  * @property {string} larkKeyWord - 飞书 key 关键字
  * @property {string} basePath - 上传的文件路径
+ * @property {string[]} ignoreRouterPath - 离线包忽略router地址
  */
 export interface ManifestPluginOptions {
     version: string;
@@ -25,4 +26,5 @@ export interface ManifestPluginOptions {
     larkWebhook: string;
     larkKeyWord: string;
     basePath: string;
+    ignoreRouterPath: string[]
 } 

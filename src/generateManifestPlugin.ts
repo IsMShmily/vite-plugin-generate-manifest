@@ -20,6 +20,7 @@ const generateManifestPlugin = async (options: ManifestPluginOptions) => {
     timestamp: dayjs().format("YYYY-MM-DD HH:mm:ss"),
     downloadUrl: `${downloadUrl}/dist.zip`,
     files: [],
+    ignoreRouterPath: options.ignoreRouterPath || []
   };
 
   try {
