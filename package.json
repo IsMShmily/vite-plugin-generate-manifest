@@ -1,6 +1,6 @@
 {
     "name": "vite-plugin-generate-manifest",
-    "version": "2.1.1",
+    "version": "2.2.2",
     "description": "A Vite plugin to generate and upload manifest.json",
     "main": "./dist/index.js",
     "module": "./dist/index.js",
@@ -25,6 +25,12 @@
         "manifest"
     ],
     "author": "",
+    "contributors": [
+        {
+            "name": "wangyue1",
+            "email": "344771607@qq.com"
+        }
+    ],
     "license": "MIT",
     "peerDependencies": {
         "vite": "^3.0.0 || ^4.0.0"

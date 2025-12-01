@@ -8,10 +8,16 @@ import pLimit from "p-limit";
 import fs from "fs";
 import archiver from "archiver";
 
-const aliOssPlugin = async (options: ManifestPluginOptions, buildConfig: any, basePath: string) => {
+const aliOssPlugin = async (
+    options: ManifestPluginOptions,
+    buildConfig: any,
+    basePath: string
+) => {
     const { region, accessKeyId, accessKeySecret, bucket } = options;
-    const outDirPath = normalizePath(path.resolve(normalizePath(buildConfig.outDir)));
-    const zipFilePath = path.resolve(outDirPath, 'dist.zip'); // 压缩文件路径
+    const outDirPath = normalizePath(
+        path.resolve(normalizePath(buildConfig.outDir))
+    );
+    const zipFilePath = path.resolve(outDirPath, "dist.zip"); // 压缩文件路径
 
     const client = new OSS({
         region,
@@ -23,28 +29,37 @@ const aliOssPlugin = async (options: ManifestPluginOptions, buildConfig: any, ba
 
     // 创建压缩文件流
     const output = fs.createWriteStream(zipFilePath);
-    const archive = archiver('zip', {
+    const archive = archiver("zip", {
         zlib: { level: 7 }, // 压缩等级
     });
     // 将输出流与文件流连接
     archive.pipe(output);
+
     // 添加 dist 目录到压缩文件
-    archive.directory(outDirPath, false);
+    // archive.directory(outDirPath, false);
+
+    archive.glob("**/*", {
+        cwd: outDirPath,
+        ignore: ["dist.zip"], // 忽略压缩文件自身
+    });
 
     // 完成压缩
     await new Promise<void>((resolve, reject) => {
         archive.finalize();
 
         // 监听压缩完成事件
-        archive.on('end', () => resolve());
-        archive.on('error', (err: any) => reject(err));
+        archive.on("end", () => resolve());
+        archive.on("error", (err: any) => reject(err));
     });
     logMsg(` 🚀 Compress dist to dist.zip`, "green");
 
     // 上传文件到 OSS
     try {
         await uploadToOss(zipFilePath, options.downloadUrl, client);
-        logMsg(` ✅ ZIP file uploaded to OSS successfully: ${options.downloadUrl}/dist.zip`, "green");
+        logMsg(
+            ` ✅ ZIP file uploaded to OSS successfully: ${options.downloadUrl}/dist.zip`,
+            "green"
+        );
     } catch (err) {
         console.error(`❌ Error uploading ZIP file to OSS:`, err);
     }
@@ -56,10 +71,7 @@ const aliOssPlugin = async (options: ManifestPluginOptions, buildConfig: any, ba
         ignore: "",
     });
 
-    logMsg(
-        ` 🚀🚀🚀 Ali OSS upload start`,
-        "green"
-    );
+    logMsg(` 🚀🚀🚀 Ali OSS upload start`, "green");
 
     const startTime = new Date().getTime();
     if (options.basePath) {
@@ -73,7 +85,9 @@ const aliOssPlugin = async (options: ManifestPluginOptions, buildConfig: any, ba
 
     const uploadFile = async (fileFullPath: string) => {
         const filePath = fileFullPath.split(outDirPath)[1];
-        const ossFilePath = path.posix.join(basePath, filePath).replace(/\\/g, "/");
+        const ossFilePath = path.posix
+            .join(basePath, filePath)
+            .replace(/\\/g, "/");
         const completePath = `${options.region}: ${options.bucket}: ${ossFilePath}`;
         const output = `${buildConfig.outDir + filePath} => ${completePath}`;
 
@@ -86,13 +100,20 @@ const aliOssPlugin = async (options: ManifestPluginOptions, buildConfig: any, ba
                 // Retry upload if error occurs
                 try {
                     await client.put(ossFilePath, fileFullPath, {
-                        headers: Object.assign({}, {}, {
-                            "x-oss-forbid-overwrite": true,
-                        }),
+                        headers: Object.assign(
+                            {},
+                            {},
+                            {
+                                "x-oss-forbid-overwrite": true,
+                            }
+                        ),
                     });
                     console.log(`🎉 Upload complete: ${output}`);
                 } catch (uploadErr) {
-                    console.error(`❌ Upload error for ${ossFilePath}:`, uploadErr);
+                    console.error(
+                        `❌ Upload error for ${ossFilePath}:`,
+                        uploadErr
+                    );
                     throw uploadErr;
                 }
             } else {
@@ -101,7 +122,6 @@ const aliOssPlugin = async (options: ManifestPluginOptions, buildConfig: any, ba
             }
         }
     };
-
 
     const promises = files.map((fileFullPath) =>
         limit(() => uploadFile(fileFullPath))
@@ -117,9 +137,13 @@ const aliOssPlugin = async (options: ManifestPluginOptions, buildConfig: any, ba
 };
 
 // 上传 ZIP 文件到 OSS
-async function uploadToOss(zipFilePath: string, downloadUrl: string, client: OSS) {
+async function uploadToOss(
+    zipFilePath: string,
+    downloadUrl: string,
+    client: OSS
+) {
     // 确保 downloadUrl 不以 / 结尾
-    const baseUrl = downloadUrl.replace(/\/$/, '');
+    const baseUrl = downloadUrl.replace(/\/$/, "");
     // 构建完整的 OSS 路径
     const ossFilePath = `${baseUrl}/`;
     try {
@@ -130,16 +154,12 @@ async function uploadToOss(zipFilePath: string, downloadUrl: string, client: OSS
             progress: (p: number) => {
                 const percent = Math.floor(p * 100);
                 console.log(`📤 Uploading: ${percent}%`);
-            }
+            },
         });
-
     } catch (err) {
-        console.error('Error uploading to OSS:', err);
+        console.error("Error uploading to OSS:", err);
         throw err;
     }
 }
 
-
-
 export default aliOssPlugin;
-
