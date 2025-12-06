@@ -27,6 +27,11 @@ const aliOssPlugin = async (
         timeout: 120000, // 增加超时时间到 120 秒
     });
 
+    // 如果 dist.zip 已存在，先删除它，避免嵌套打包
+    if (fs.existsSync(zipFilePath)) {
+        fs.unlinkSync(zipFilePath);
+    }
+
     // 创建压缩文件流
     const output = fs.createWriteStream(zipFilePath);
     const archive = archiver("zip", {
@@ -35,12 +40,12 @@ const aliOssPlugin = async (
     // 将输出流与文件流连接
     archive.pipe(output);
 
-    // 添加 dist 目录到压缩文件
-    // archive.directory(outDirPath, false);
-
+    // 使用 archive.glob 添加 dist 目录下的所有文件到压缩包
+    // cwd: 设置当前工作目录为 outDirPath，也就是输出目录
+    // ignore: 忽略 dist.zip 文件，避免将自身再次压缩进包内造成嵌套
     archive.glob("**/*", {
         cwd: outDirPath,
-        ignore: ["dist.zip"], // 忽略压缩文件自身
+        ignore: ["dist.zip", "**/dist.zip"], // 忽略压缩文件自身（支持多种路径格式）
     });
 
     // 完成压缩
